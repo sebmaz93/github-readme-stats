@@ -1,3 +1,5 @@
+[![Most Used Languages - refresh if not loaded](https://github-readme-stats-sebmaz93.vercel.app/api/top-langs/?username=sebmaz93&langs_count=5&theme=dracula&count_private=true&hide=javascript,css,html,shell,powershell,dockerfile,handlebars,vue,python,scss&size_weight=0&count_weight=1)](https://github.com/sebmaz93/github-readme-stats)
+
 <div align="center">
   <img src="https://res.cloudinary.com/anuraghazra/image/upload/v1594908242/logo_ccswme.svg" width="100px" alt="GitHub Readme Stats" />
   <h1 style="font-size: 28px; margin: 10px 0;">GitHub Readme Stats</h1>
