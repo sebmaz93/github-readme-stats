@@ -111,8 +111,15 @@ const fetchTopLanguages = async (
 
   let repoCount = 0;
 
+  console.info("---Langs---");
+  console.info(repoNodes);
+
   repoNodes = repoNodes
-    .filter((node) => node.languages.edges.length > 0)
+    .filter((node) => {
+      console.info("---Langs Loop---");
+      console.info(node.languages);
+      return node.languages.edges.length > 0;
+    })
     // flatten the list of language nodes
     .reduce((acc, curr) => curr.languages.edges.concat(acc), [])
     .reduce((acc, prev) => {
