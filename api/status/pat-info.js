@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * @file Contains a simple cloud function that can be used to check which PATs are no
  * longer working. It returns a list of valid PATs, expired PATs and PATs with errors.
@@ -5,14 +7,18 @@
  * @description This function is currently rate limited to 1 request per 5 minutes.
  */
 
-import { logger, request, dateDiff } from "../../src/common/utils.js";
+import { request } from "../../src/common/http.js";
+import { logger } from "../../src/common/log.js";
+import { dateDiff } from "../../src/common/ops.js";
+
 export const RATE_LIMIT_SECONDS = 60 * 5; // 1 request per 5 minutes
 
 /**
  * Simple uptime check fetcher for the PATs.
  *
- * @param {import('axios').AxiosRequestHeaders} variables
- * @param {string} token
+ * @param {any} variables Fetcher variables.
+ * @param {string} token GitHub token.
+ * @returns {Promise<import('axios').AxiosResponse>} The response.
  */
 const uptimeFetcher = (variables, token) => {
   return request(
@@ -37,9 +43,19 @@ const getAllPATs = () => {
 };
 
 /**
+ * @typedef {(variables: any, token: string) => Promise<import('axios').AxiosResponse>} Fetcher The fetcher function.
+ * @typedef {{validPATs: string[], expiredPATs: string[], exhaustedPATs: string[], suspendedPATs: string[], errorPATs: string[], details: any}} PATInfo The PAT info.
+ */
+
+/**
  * Check whether any of the PATs is expired.
+ *
+ * @param {Fetcher} fetcher The fetcher function.
+ * @param {any} variables Fetcher variables.
+ * @returns {Promise<PATInfo>} The response.
  */
 const getPATInfo = async (fetcher, variables) => {
+  /** @type {Record<string, any>} */
   const details = {};
   const PATs = getAllPATs();
 
@@ -117,6 +133,10 @@ const getPATInfo = async (fetcher, variables) => {
 
 /**
  * Cloud function that returns information about the used PATs.
+ *
+ * @param {any} _ The request.
+ * @param {any} res The response.
+ * @returns {Promise<void>} The response.
  */
 export default async (_, res) => {
   res.setHeader("Content-Type", "application/json");

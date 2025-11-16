@@ -4,23 +4,31 @@
 import dotenv from "dotenv";
 dotenv.config();
 
-import { describe } from "@jest/globals";
+import { beforeAll, describe, expect, test } from "@jest/globals";
 import axios from "axios";
-import { renderRepoCard } from "../../src/cards/repo-card.js";
-import { renderStatsCard } from "../../src/cards/stats-card.js";
-import { renderTopLanguages } from "../../src/cards/top-languages-card.js";
-import { renderWakatimeCard } from "../../src/cards/wakatime-card.js";
+import { renderGistCard } from "../../src/cards/gist.js";
+import { renderRepoCard } from "../../src/cards/repo.js";
+import { renderStatsCard } from "../../src/cards/stats.js";
+import { renderTopLanguages } from "../../src/cards/top-languages.js";
+import { renderWakatimeCard } from "../../src/cards/wakatime.js";
 
 const REPO = "curly-fiesta";
 const USER = "catelinemnemosyne";
+const STATS_CARD_USER = "e2eninja";
+const GIST_ID = "372cef55fd897b31909fdeb3a7262758";
+
 const STATS_DATA = {
-  name: "Cateline Mnemosyne",
-  totalPRs: 2,
-  totalCommits: 8,
+  name: "CodeNinja",
+  totalPRs: 1,
+  totalReviews: 0,
+  totalCommits: 3,
   totalIssues: 1,
   totalStars: 1,
-  contributedTo: 1,
-  rank: { level: "B", score: 98.50610674501908 },
+  contributedTo: 0,
+  rank: {
+    level: "C",
+    percentile: 98.73972605284538,
+  },
 };
 
 const LANGS_DATA = {
@@ -30,7 +38,7 @@ const LANGS_DATA = {
     size: 1721,
   },
   CSS: {
-    color: "#563d7c",
+    color: "#663399",
     name: "CSS",
     size: 930,
   },
@@ -46,7 +54,7 @@ const WAKATIME_DATA = {
   is_already_updating: false,
   is_coding_activity_visible: true,
   is_including_today: false,
-  is_other_usage_visible: true,
+  is_other_usage_visible: false,
   is_stuck: false,
   is_up_to_date: false,
   is_up_to_date_pending_future: false,
@@ -77,6 +85,23 @@ const REPOSITORY_DATA = {
   starCount: 1,
 };
 
+/**
+ * @typedef {import("../../src/fetchers/types").GistData} GistData Gist data type.
+ */
+
+/**
+ * @type {GistData}
+ */
+const GIST_DATA = {
+  name: "link.txt",
+  nameWithOwner: "qwerty541/link.txt",
+  description:
+    "Trying to access this path on Windows 10 ver. 1803+ will breaks NTFS",
+  language: "Text",
+  starsCount: 1,
+  forksCount: 0,
+};
+
 const CACHE_BURST_STRING = `v=${new Date().getTime()}`;
 
 describe("Fetch Cards", () => {
@@ -92,20 +117,22 @@ describe("Fetch Cards", () => {
 
     // Check if the Vercel preview instance stats card function is up and running.
     await expect(
-      axios.get(`${VERCEL_PREVIEW_URL}/api?username=${USER}`),
+      axios.get(`${VERCEL_PREVIEW_URL}/api?username=${STATS_CARD_USER}`),
     ).resolves.not.toThrow();
 
     // Get local stats card.
-    const localStatsCardSVG = renderStatsCard(STATS_DATA);
+    const localStatsCardSVG = renderStatsCard(STATS_DATA, {
+      include_all_commits: true,
+    });
 
     // Get the Vercel preview stats card response.
     const serverStatsSvg = await axios.get(
-      `${VERCEL_PREVIEW_URL}/api?username=${USER}&${CACHE_BURST_STRING}`,
+      `${VERCEL_PREVIEW_URL}/api?username=${STATS_CARD_USER}&include_all_commits=true&${CACHE_BURST_STRING}`,
     );
 
     // Check if stats card from deployment matches the stats card from local.
     expect(serverStatsSvg.data).toEqual(localStatsCardSVG);
-  }, 7000);
+  }, 15000);
 
   test("retrieve language card", async () => {
     expect(VERCEL_PREVIEW_URL).toBeDefined();
@@ -130,7 +157,7 @@ describe("Fetch Cards", () => {
 
     // Check if language card from deployment matches the local language card.
     expect(severLanguageSVG.data).toEqual(localLanguageCardSVG);
-  });
+  }, 15000);
 
   test("retrieve WakaTime card", async () => {
     expect(VERCEL_PREVIEW_URL).toBeDefined();
@@ -150,7 +177,7 @@ describe("Fetch Cards", () => {
 
     // Check if WakaTime card from deployment matches the local WakaTime card.
     expect(serverWakaTimeSvg.data).toEqual(localWakaCardSVG);
-  });
+  }, 15000);
 
   test("retrieve repo card", async () => {
     expect(VERCEL_PREVIEW_URL).toBeDefined();
@@ -172,5 +199,27 @@ describe("Fetch Cards", () => {
 
     // Check if Repo card from deployment matches the local Repo card.
     expect(serverRepoSvg.data).toEqual(localRepoCardSVG);
-  });
+  }, 15000);
+
+  test("retrieve gist card", async () => {
+    expect(VERCEL_PREVIEW_URL).toBeDefined();
+
+    // Check if the Vercel preview instance Gist function is up and running.
+    await expect(
+      axios.get(
+        `${VERCEL_PREVIEW_URL}/api/gist?id=${GIST_ID}&${CACHE_BURST_STRING}`,
+      ),
+    ).resolves.not.toThrow();
+
+    // Get local gist card.
+    const localGistCardSVG = renderGistCard(GIST_DATA);
+
+    // Get the Vercel preview gist card response.
+    const serverGistSvg = await axios.get(
+      `${VERCEL_PREVIEW_URL}/api/gist?id=${GIST_ID}&${CACHE_BURST_STRING}`,
+    );
+
+    // Check if Gist card from deployment matches the local Gist card.
+    expect(serverGistSvg.data).toEqual(localGistCardSVG);
+  }, 15000);
 });

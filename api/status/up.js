@@ -1,3 +1,5 @@
+// @ts-check
+
 /**
  * @file Contains a simple cloud function that can be used to check if the PATs are still
  * functional.
@@ -5,16 +7,18 @@
  * @description This function is currently rate limited to 1 request per 5 minutes.
  */
 
+import { request } from "../../src/common/http.js";
 import retryer from "../../src/common/retryer.js";
-import { logger, request } from "../../src/common/utils.js";
+import { logger } from "../../src/common/log.js";
 
 export const RATE_LIMIT_SECONDS = 60 * 5; // 1 request per 5 minutes
 
 /**
  * Simple uptime check fetcher for the PATs.
  *
- * @param {import('axios').AxiosRequestHeaders} variables
- * @param {string} token
+ * @param {any} variables Fetcher variables.
+ * @param {string} token GitHub token.
+ * @returns {Promise<import('axios').AxiosResponse>} The response.
  */
 const uptimeFetcher = (variables, token) => {
   return request(
@@ -35,10 +39,20 @@ const uptimeFetcher = (variables, token) => {
 };
 
 /**
+ * @typedef {{
+ *  schemaVersion: number;
+ *  label: string;
+ *  message: "up" | "down";
+ *  color: "brightgreen" | "red";
+ *  isError: boolean
+ * }} ShieldsResponse Shields.io response object.
+ */
+
+/**
  * Creates Json response that can be used for shields.io dynamic card generation.
  *
- * @param {*} up Whether the PATs are up or not.
- * @returns Dynamic shields.io JSON response object.
+ * @param {boolean} up Whether the PATs are up or not.
+ * @returns {ShieldsResponse}  Dynamic shields.io JSON response object.
  *
  * @see https://shields.io/endpoint.
  */
@@ -59,6 +73,10 @@ const shieldsUptimeBadge = (up) => {
 
 /**
  * Cloud function that returns whether the PATs are still functional.
+ *
+ * @param {any} req The request.
+ * @param {any} res The response.
+ * @returns {Promise<void>} Nothing.
  */
 export default async (req, res) => {
   let { type } = req.query;
@@ -71,6 +89,9 @@ export default async (req, res) => {
     try {
       await retryer(uptimeFetcher, {});
     } catch (err) {
+      // Resolve eslint no-unused-vars
+      err;
+
       PATsValid = false;
     }
 
