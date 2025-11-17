@@ -22,10 +22,10 @@ const fetcher = (variables, token) => {
         user(login: $login) {
           # fetch only owner repos & not forks
           repositories(ownerAffiliations: OWNER, isFork: false, first: 100, after: $reposAfter) {
-      pageInfo {
-        hasNextPage
-        endCursor
-      }{
+            pageInfo {
+            hasNextPage
+            endCursor
+            }
             nodes {
               name
               languages(first: 20, orderBy: {field: SIZE, direction: DESC}) {
